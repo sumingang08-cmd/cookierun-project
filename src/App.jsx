@@ -1,121 +1,84 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useRef, useState } from 'react'
+import { RunnerGame } from './game.js'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const canvasRef = useRef(null)
+  const gameRef = useRef(null)
+  const [ui, setUi] = useState({ state: 'ready', score: 0, highScore: 0 })
+
+  useEffect(() => {
+    const game = new RunnerGame(canvasRef.current, {
+      onUpdate: setUi,
+    })
+    gameRef.current = game
+    return () => game.destroy()
+  }, [])
+
+  const start = () => gameRef.current?.start()
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="game">
+      <canvas ref={canvasRef} className="game-canvas" />
+
+      {ui.state === 'ready' && (
+        <div className="overlay">
+          <h1>쿠키 러너</h1>
+          <div className="controls">
+            <p>
+              <kbd>↑</kbd> / <kbd>Space</kbd> 점프
+            </p>
+            <p>
+              <kbd>↓</kbd> 숙이기
+            </p>
+          </div>
+          <p className="sub">장애물을 피해 달리세요. 익룡이 나타나면 화살표를 따라 행동하세요!</p>
+          <button type="button" className="start-btn" onClick={start}>
+            시작
+          </button>
+          <p className="hint">스페이스바 또는 위 화살표로 시작</p>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+      )}
+
+      {ui.state === 'over' && (
+        <div className="overlay">
+          <h2>게임 오버</h2>
+          <div className="score-box">
+            <div>
+              <span className="label">점수</span>
+              <span className="value">{ui.score}</span>
+            </div>
+            <div>
+              <span className="label">최고 기록</span>
+              <span className="value">{ui.highScore}</span>
+            </div>
+          </div>
+          <button type="button" className="start-btn" onClick={start}>
+            다시 시작
+          </button>
+          <p className="hint">스페이스바로 다시 시작</p>
         </div>
+      )}
+
+      <div className="touch-controls">
         <button
           type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          className="ctl duck-btn"
+          onPointerDown={() => gameRef.current?.setDuck(true)}
+          onPointerUp={() => gameRef.current?.setDuck(false)}
+          onPointerLeave={() => gameRef.current?.setDuck(false)}
         >
-          Count is {count}
+          ↓ 숙이기
         </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <button
+          type="button"
+          className="ctl jump-btn"
+          onPointerDown={() => gameRef.current?.pressJump()}
+        >
+          ↑ 점프
+        </button>
+      </div>
+    </div>
   )
 }
 
